@@ -9,16 +9,13 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -33,9 +30,12 @@ public class MainActivity extends AppCompatActivity {
     TextView textViewKategorie;
     Button buttonOK;
     TextView textView_displaySum;
-    Model model;
     ArrayAdapter<String> catAdapter;
-    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.YYYY");
+    SimpleDateFormat simpleDateFormat;
+    Model model;
+
+    File path;
+    File ENTRIES;
 
 
     @Override
@@ -50,9 +50,16 @@ public class MainActivity extends AppCompatActivity {
         initTextViewS();
         initTextViewDate();
         initAdapter1();
-        refreshAdapterCategories(catAdapter,true);
-    }
+        initAdapter2(catAdapter);
 
+        simpleDateFormat = new SimpleDateFormat("dd.MM.YYYY");
+
+        model = new Model();
+
+        path = getApplicationContext().getFilesDir();
+        ENTRIES = new File(path,"ENTRIES.csv");
+
+    }
     private void initTextViewDate() {
         textViewDate = findViewById(R.id.textViewDate);
         final Calendar buyDate = Calendar.getInstance();
@@ -75,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
     private void initTextViewS() {
         textView_displaySum = findViewById(R.id.textView_displaySum);
         textViewPrice = findViewById(R.id.textViewPrice);
@@ -89,8 +95,7 @@ public class MainActivity extends AppCompatActivity {
         spinnerAusgabenEinnahmen = findViewById(R.id.spinnerAusgabenEinnahmen);
         spinnerAusgabenEinnahmen.setAdapter(adapterAusgabenEinnahmen);
     }
-
-    private void refreshAdapterCategories(ArrayAdapter<String> catAdapter, boolean init) {
+    private void initAdapter2(ArrayAdapter<String> catAdapter) {
         List<String> categories = new ArrayList<>();
         spinnerKatagorie = findViewById(R.id.spinnerKatagorie);
         try (BufferedReader br = new BufferedReader(new InputStreamReader(getAssets().open("cat.csv")))) {
@@ -99,29 +104,33 @@ public class MainActivity extends AppCompatActivity {
             Log.e("initUI","Error at reading File");
         }
 
-        if(init){
         catAdapter = new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,categories);
         spinnerKatagorie.setAdapter(catAdapter);
-        }else{
-            catAdapter.clear();
-            catAdapter.addAll(categories);
-        }
+
     }
 
+    public void onButtonClicked(View view) {
+        String date = textViewDate.getText().toString();
+        String price = textViewPrice.getText().toString();
+
+        String categorieSpinner = spinnerKatagorie.getSelectedItem().toString();
+        String categorieTextView = textViewKategorie.getText().toString();
+
+        String IO = spinnerAusgabenEinnahmen.getSelectedItem().toString();
 
 
+    }
 
 
     /*
         private void bindAdapterToListView(ListView lv) {
         mAdapter = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,customers);
         lv.setAdapter(mAdapter);
-    }
+        }
 
-    public void addItemToList(View view) {
-        //customers.add("New Element");
-        //mAdapter.notifyDataSetChanged();
-    }
+        public void addItemToList(View view) {
+            //customers.add("New Element");
+            //mAdapter.notifyDataSetChanged();
+        }
      */
-
 }

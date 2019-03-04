@@ -35,6 +35,8 @@
                     android:id="@+id/textViewAM"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
                     android:layout_weight="5"
                     android:gravity="center"
                     android:text="AM"
@@ -45,15 +47,17 @@
                     android:id="@+id/textViewDate"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_margin="10dp"
                     android:layout_weight="3"
+                    android:editable="false"
                     android:ems="10"
-                    android:inputType="none"
-                    android:editable="false"/>
+                    android:inputType="none" />
 
                 <Spinner
                     android:id="@+id/spinnerAusgabenEinnahmen"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_margin="10dp"
                     android:layout_weight="3"
                     android:spinnerMode="dropdown" />
             </LinearLayout>
@@ -68,6 +72,8 @@
                     android:id="@+id/textViewVON"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
                     android:layout_weight="5"
                     android:gravity="center"
                     android:text="VON"
@@ -77,6 +83,7 @@
                     android:id="@+id/textViewPrice"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_margin="10dp"
                     android:layout_weight="3"
                     android:ems="10"
                     android:inputType="numberDecimal" />
@@ -85,6 +92,7 @@
                     android:id="@+id/textViewEUROFUER"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_margin="10dp"
                     android:layout_weight="3"
                     android:gravity="center"
                     android:text="EURO FÜR"
@@ -101,6 +109,7 @@
                     android:id="@+id/spinnerKatagorie"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_margin="10dp"
                     android:layout_weight="4"
                     android:spinnerMode="dropdown" />
 
@@ -117,6 +126,7 @@
                     android:id="@+id/textViewKategorie"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_margin="10dp"
                     android:layout_weight="4"
                     android:ems="10"
                     android:inputType="textPersonName" />
@@ -125,7 +135,12 @@
                     android:id="@+id/buttonOK"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="15dp"
+                    android:layout_marginBottom="5dp"
                     android:layout_weight="4"
+                    android:onClick="onButtonClicked"
                     android:text="OK" />
             </LinearLayout>
         </LinearLayout>
