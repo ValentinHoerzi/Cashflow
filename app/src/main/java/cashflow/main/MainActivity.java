@@ -32,9 +32,8 @@ public class MainActivity extends AppCompatActivity {
 
     Spinner spinnerAusgabenEinnahmen,
             spinnerKatagorie;
-
-    
     ArrayAdapter<String> arrayAdapterCategorie;
+    List<String> currentCategories;
 
     Button buttonOK;
 
@@ -58,16 +57,11 @@ public class MainActivity extends AppCompatActivity {
         initTextViewS();
         initTextViewDate();
         initAdapter1();
-
-
         initAdapter2();
 
         simpleDateFormat = new SimpleDateFormat("dd.MM.YYYY");
 
         model = new Model();
-
-
-
     }
     private void initTextViewS() {
         textView_displaySum = findViewById(R.id.textView_displaySum);
@@ -104,19 +98,18 @@ public class MainActivity extends AppCompatActivity {
         spinnerAusgabenEinnahmen = findViewById(R.id.spinnerAusgabenEinnahmen);
         spinnerAusgabenEinnahmen.setAdapter(adapterAusgabenEinnahmen);
     }
-
     private void initAdapter2() {
-        List<String> c = new ArrayList<>();
+        currentCategories = new ArrayList<>();
         spinnerKatagorie = findViewById(R.id.spinnerKatagorie);
 
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(openFileInput(categories)))) {
-            c = Arrays.asList(br.readLine().split(";"));
+            currentCategories.addAll(Arrays.asList(br.readLine().split(";")));
         }catch(Exception e){
             Log.e("initUI","Error at reading File");
         }
 
-        arrayAdapterCategorie = new ArrayAdapter(this,android.R.layout.simple_spinner_dropdown_item, c);
+        arrayAdapterCategorie = new ArrayAdapter(this,android.R.layout.simple_spinner_dropdown_item, currentCategories);
         spinnerKatagorie.setAdapter(arrayAdapterCategorie);
     }
 
@@ -136,11 +129,19 @@ public class MainActivity extends AppCompatActivity {
             eingabe = date +";"+price+";"+categorieTextView.trim()+";"+IO;
             writeToDataFile(categorieTextView.trim()+";",categories,true);
 
-            arrayAdapterCategorie.add(categorieTextView.trim());
-            arrayAdapterCategorie.notifyDataSetChanged();
+            currentCategories.add(categorieTextView.trim());
+            arrayAdapterCategorie = new ArrayAdapter(this,android.R.layout.simple_spinner_dropdown_item, currentCategories);
+            spinnerKatagorie.setAdapter(arrayAdapterCategorie);
         }
 
+        clearInputFields();
         writeToDataFile(eingabe,data,false);
+    }
+
+    private void clearInputFields() {
+        textViewDate.setText("");
+        textViewPrice.setText("");
+        textViewKategorie.setText(" ");
     }
 
     private void writeToDataFile(String toFile,String fileName,boolean isCategorie) {
