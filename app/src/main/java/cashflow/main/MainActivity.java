@@ -13,29 +13,37 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    EditText textViewDate;
-    Spinner spinnerAusgabenEinnahmen;
-    EditText textViewPrice;
-    Spinner spinnerKatagorie;
-    TextView textViewKategorie;
+    TextView textViewDate,
+            textViewPrice,
+            textViewKategorie,
+            textView_displaySum;
+
+    Spinner spinnerAusgabenEinnahmen,
+            spinnerKatagorie;
+
+    
+    ArrayAdapter<String> arrayAdapterCategorie;
+
     Button buttonOK;
-    TextView textView_displaySum;
-    ArrayAdapter<String> catAdapter;
+
     SimpleDateFormat simpleDateFormat;
+
     Model model;
 
-    File path;
-    File ENTRIES;
+    String data = "data.csv";
+    String categories = "Categories.csv";
 
 
     @Override
@@ -50,15 +58,22 @@ public class MainActivity extends AppCompatActivity {
         initTextViewS();
         initTextViewDate();
         initAdapter1();
-        initAdapter2(catAdapter);
+
+
+        initAdapter2();
 
         simpleDateFormat = new SimpleDateFormat("dd.MM.YYYY");
 
         model = new Model();
 
-        path = getApplicationContext().getFilesDir();
-        ENTRIES = new File(path,"ENTRIES.csv");
 
+
+    }
+    private void initTextViewS() {
+        textView_displaySum = findViewById(R.id.textView_displaySum);
+        textViewPrice = findViewById(R.id.textViewPrice);
+        textViewKategorie = findViewById(R.id.textViewKategorie);
+        buttonOK = findViewById(R.id.buttonOK);
     }
     private void initTextViewDate() {
         textViewDate = findViewById(R.id.textViewDate);
@@ -82,12 +97,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    private void initTextViewS() {
-        textView_displaySum = findViewById(R.id.textView_displaySum);
-        textViewPrice = findViewById(R.id.textViewPrice);
-        textViewKategorie = findViewById(R.id.textViewKategorie);
-        buttonOK = findViewById(R.id.buttonOK);
-    }
     private void initAdapter1() {
         ArrayAdapter<String> adapterAusgabenEinnahmen = new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new ArrayList<String>());
         adapterAusgabenEinnahmen.add("Einnahmen");
@@ -95,18 +104,20 @@ public class MainActivity extends AppCompatActivity {
         spinnerAusgabenEinnahmen = findViewById(R.id.spinnerAusgabenEinnahmen);
         spinnerAusgabenEinnahmen.setAdapter(adapterAusgabenEinnahmen);
     }
-    private void initAdapter2(ArrayAdapter<String> catAdapter) {
-        List<String> categories = new ArrayList<>();
+
+    private void initAdapter2() {
+        List<String> c = new ArrayList<>();
         spinnerKatagorie = findViewById(R.id.spinnerKatagorie);
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(getAssets().open("cat.csv")))) {
-            categories = Arrays.asList(br.readLine().split(";"));
+
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(openFileInput(categories)))) {
+            c = Arrays.asList(br.readLine().split(";"));
         }catch(Exception e){
             Log.e("initUI","Error at reading File");
         }
 
-        catAdapter = new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,categories);
-        spinnerKatagorie.setAdapter(catAdapter);
-
+        arrayAdapterCategorie = new ArrayAdapter(this,android.R.layout.simple_spinner_dropdown_item, c);
+        spinnerKatagorie.setAdapter(arrayAdapterCategorie);
     }
 
     public void onButtonClicked(View view) {
@@ -118,7 +129,43 @@ public class MainActivity extends AppCompatActivity {
 
         String IO = spinnerAusgabenEinnahmen.getSelectedItem().toString();
 
+        String eingabe ="";
+        if(categorieTextView.equals(" ")){ //If categorieTextView is empty, the selection of the spinner is taken
+            eingabe = date +";"+price+";"+categorieSpinner+";"+IO;
+        }else{
+            eingabe = date +";"+price+";"+categorieTextView.trim()+";"+IO;
+            writeToDataFile(categorieTextView.trim()+";",categories,true);
 
+            arrayAdapterCategorie.add(categorieTextView.trim());
+            arrayAdapterCategorie.notifyDataSetChanged();
+        }
+
+        writeToDataFile(eingabe,data,false);
+    }
+
+    private void writeToDataFile(String toFile,String fileName,boolean isCategorie) {
+        if(isCategorie){
+                String currentEntries ="";
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(openFileInput(categories)))) {
+                    currentEntries = br.readLine();
+                }catch(Exception e){
+                    Log.e("writeToDataFile","Error at reading File");
+                }
+                String newLine = currentEntries += toFile;
+            try (PrintWriter out = new PrintWriter(new OutputStreamWriter(openFileOutput(fileName, MODE_PRIVATE)))) {
+                out.println(newLine);
+                out.flush();
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }else{
+            try (PrintWriter out = new PrintWriter(new OutputStreamWriter(openFileOutput(fileName, MODE_APPEND)))) {
+                out.println(toFile);
+                out.flush();
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
     }
 
 

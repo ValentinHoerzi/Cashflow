@@ -7,6 +7,7 @@
     tools:context=".MainActivity">
 
     <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="395dp"
         android:layout_height="715dp"
         android:layout_marginStart="8dp"
@@ -129,7 +130,8 @@
                     android:layout_margin="10dp"
                     android:layout_weight="4"
                     android:ems="10"
-                    android:inputType="textPersonName" />
+                    android:inputType="textPersonName"
+                    android:text=" " />
 
                 <Button
                     android:id="@+id/buttonOK"
@@ -150,9 +152,11 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="9"
+            android:background="@android:color/background_dark"
             android:gravity="center"
             android:text="CA$H: "
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:textColor="@android:color/background_light" />
 
         <ListView
             android:id="@+id/listView"
@@ -161,4 +165,5 @@
             android:layout_weight="5" />
 
     </LinearLayout>
+
 </android.support.constraint.ConstraintLayout>
