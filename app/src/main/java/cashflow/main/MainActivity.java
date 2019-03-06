@@ -8,9 +8,10 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
-import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -20,29 +21,30 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.YYYY");;
+    String dataFile = "data.csv";
+    String categoriesFile = "Categories.csv";
 
     TextView textViewDate,
             textViewPrice,
             textViewKategorie,
             textView_displaySum;
-
     Spinner spinnerAusgabenEinnahmen,
             spinnerKatagorie;
+    Button buttonOK;
+    ListView myListView;
+
+    //For the Categorie Spinner
     ArrayAdapter<String> arrayAdapterCategorie;
     List<String> currentCategories;
 
-    Button buttonOK;
-
-    SimpleDateFormat simpleDateFormat;
-
-    Model model;
-
-    String data = "data.csv";
-    String categories = "Categories.csv";
+    //For my list View
+    MyListViewAdapter adapterListView;
+    List<Entry> currentData;
 
 
     @Override
@@ -54,20 +56,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initUI() {
-        initTextViewS();
+        initOV();
         initTextViewDate();
         initAdapter1();
         initAdapter2();
-
-        simpleDateFormat = new SimpleDateFormat("dd.MM.YYYY");
-
-        model = new Model();
+        initAdapter3();
     }
-    private void initTextViewS() {
-        textView_displaySum = findViewById(R.id.textView_displaySum);
+
+    private void initOV() {
         textViewPrice = findViewById(R.id.textViewPrice);
         textViewKategorie = findViewById(R.id.textViewKategorie);
         buttonOK = findViewById(R.id.buttonOK);
+        textView_displaySum = findViewById(R.id.textView_displaySum);
     }
     private void initTextViewDate() {
         textViewDate = findViewById(R.id.textViewDate);
@@ -103,54 +103,73 @@ public class MainActivity extends AppCompatActivity {
         spinnerKatagorie = findViewById(R.id.spinnerKatagorie);
 
 
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(openFileInput(categories)))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(openFileInput(categoriesFile)))) {
             currentCategories.addAll(Arrays.asList(br.readLine().split(";")));
         }catch(Exception e){
-            Log.e("initUI","Error at reading File");
+            try (PrintWriter out = new PrintWriter(new OutputStreamWriter(openFileOutput(categoriesFile, MODE_PRIVATE)))) {
+                out.println("Auto;Essen;Party;Schule;Allgemeines;Motor;");
+                out.flush();
+            }catch(Exception ee){
+                e.printStackTrace();
+            }
+            initAdapter2();
         }
 
         arrayAdapterCategorie = new ArrayAdapter(this,android.R.layout.simple_spinner_dropdown_item, currentCategories);
         spinnerKatagorie.setAdapter(arrayAdapterCategorie);
     }
+    private void initAdapter3(){
+        currentData = new ArrayList<>();
+        myListView = findViewById(R.id.listView);
 
-    public void onButtonClicked(View view) {
-        String date = textViewDate.getText().toString();
-        String price = textViewPrice.getText().toString();
-
-        String categorieSpinner = spinnerKatagorie.getSelectedItem().toString();
-        String categorieTextView = textViewKategorie.getText().toString();
-
-        String IO = spinnerAusgabenEinnahmen.getSelectedItem().toString();
-
-        String eingabe ="";
-        if(categorieTextView.equals(" ")){ //If categorieTextView is empty, the selection of the spinner is taken
-            eingabe = date +";"+price+";"+categorieSpinner+";"+IO;
-        }else{
-            eingabe = date +";"+price+";"+categorieTextView.trim()+";"+IO;
-            writeToDataFile(categorieTextView.trim()+";",categories,true);
-
-            currentCategories.add(categorieTextView.trim());
-            arrayAdapterCategorie = new ArrayAdapter(this,android.R.layout.simple_spinner_dropdown_item, currentCategories);
-            spinnerKatagorie.setAdapter(arrayAdapterCategorie);
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(openFileInput(dataFile)))) {
+            String line = br.readLine();
+            while(line!=null){
+                String[] arr = line.split(";");
+                currentData.add(new Entry(arr[0],arr[1],arr[2],arr[3]));
+                line=br.readLine();
+            }
+        }catch(Exception e){
+            try (PrintWriter out = new PrintWriter(new OutputStreamWriter(openFileOutput(dataFile, MODE_PRIVATE)))) {
+                out.flush();
+            }catch(Exception ee){
+                e.printStackTrace();
+            }
+            initAdapter3();
         }
 
-        clearInputFields();
-        writeToDataFile(eingabe,data,false);
-    }
+        calculateCurrentBudget();
 
+        adapterListView = new MyListViewAdapter(this,R.layout.my_list_view,currentData);
+        myListView.setAdapter(adapterListView);
+    }
+    private void calculateCurrentBudget(){
+        int budget = 500;
+        if(currentData!=null&&!currentData.isEmpty()) {
+            for (Entry d : currentData) {
+                String price = d.getPrice();
+                String io = d.getIo();
+                if (io.equals("Einnahmen")) {
+                    budget += Integer.valueOf(price);
+                } else {
+                    budget -= Integer.valueOf(price);
+                }
+            }
+        }
+            textView_displaySum.setText("Ca$h :"+budget+" €");
+    }
     private void clearInputFields() {
         textViewDate.setText("");
         textViewPrice.setText("");
         textViewKategorie.setText(" ");
     }
-
-    private void writeToDataFile(String toFile,String fileName,boolean isCategorie) {
+    private void writeToFile(Entry entry,String toFile, String fileName, boolean isCategorie) {
         if(isCategorie){
                 String currentEntries ="";
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(openFileInput(categories)))) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(openFileInput(categoriesFile)))) {
                     currentEntries = br.readLine();
                 }catch(Exception e){
-                    Log.e("writeToDataFile","Error at reading File");
+                    Log.e("writeToFile","Error at reading File");
                 }
                 String newLine = currentEntries += toFile;
             try (PrintWriter out = new PrintWriter(new OutputStreamWriter(openFileOutput(fileName, MODE_PRIVATE)))) {
@@ -160,8 +179,9 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }else{
+
             try (PrintWriter out = new PrintWriter(new OutputStreamWriter(openFileOutput(fileName, MODE_APPEND)))) {
-                out.println(toFile);
+                out.println(entry.toString());
                 out.flush();
             }catch(Exception e){
                 e.printStackTrace();
@@ -169,16 +189,37 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void onButtonClicked(View view) {
+        String date = textViewDate.getText().toString();
+        String price = textViewPrice.getText().toString();
+        String IO = spinnerAusgabenEinnahmen.getSelectedItem().toString();
 
-    /*
-        private void bindAdapterToListView(ListView lv) {
-        mAdapter = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,customers);
-        lv.setAdapter(mAdapter);
+        String categorieSpinner = spinnerKatagorie.getSelectedItem().toString();
+        String categorieTextView = textViewKategorie.getText().toString();
+
+        if(date.equals("") || price.equals("")){
+            toast();
+            return;
         }
 
-        public void addItemToList(View view) {
-            //customers.add("New Element");
-            //mAdapter.notifyDataSetChanged();
+        Entry entry;
+        if(categorieTextView.equals(" ")){ //If categorieTextView is empty, the selection of the spinner is taken
+            entry = new Entry(date,price,categorieSpinner,IO);
+        }else{
+            entry = new Entry(date,price,categorieTextView.trim(),IO);
+            writeToFile(null,categorieTextView.trim()+";",categoriesFile,true);
+            currentCategories.add(categorieTextView.trim());
+            arrayAdapterCategorie.notifyDataSetChanged();
+            spinnerKatagorie.setAdapter(arrayAdapterCategorie);
         }
-     */
+        currentData.add(entry);
+        adapterListView.notifyDataSetChanged();
+        clearInputFields();
+        calculateCurrentBudget();
+        writeToFile(entry,"",dataFile,false);
+    }
+
+    private void toast() {
+        Toast.makeText(getApplicationContext(),"INPUTS",Toast.LENGTH_LONG);
+    }
 }
